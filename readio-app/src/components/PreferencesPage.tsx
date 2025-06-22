@@ -171,16 +171,30 @@ const PreferencesPage: React.FC<PreferencesPageProps> = ({
                 Select all that apply (minimum 1)
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {genres.map((genre) => (
-                  <Chip
-                    key={genre}
-                    label={genre}
-                    onClick={() => handleGenreToggle(genre)}
-                    color={selectedGenres.includes(genre) ? 'primary' : 'default'}
-                    variant={selectedGenres.includes(genre) ? 'filled' : 'outlined'}
-                    sx={{ mb: 1 }}
-                  />
-                ))}
+                {genres.map((genre) => {
+                  const isSelected = selectedGenres.includes(genre);
+                  const isChildrensGenre = genre.startsWith('Children\'s');
+                  
+                  return (
+                    <Chip
+                      key={genre}
+                      label={genre}
+                      onClick={() => handleGenreToggle(genre)}
+                      color={isSelected ? 'primary' : 'default'}
+                      variant={isSelected ? 'filled' : 'outlined'}
+                      sx={{ 
+                        mb: 1,
+                        ...(isSelected && isChildrensGenre && {
+                          backgroundColor: '#FFC0CB',
+                          color: '#000',
+                          '&:hover': {
+                            backgroundColor: '#FFB6C1',
+                          }
+                        })
+                      }}
+                    />
+                  );
+                })}
               </Box>
               {selectedGenres.length > 0 && (
                 <Typography variant="caption" color="primary" sx={{ mt: 1, display: 'block' }}>
