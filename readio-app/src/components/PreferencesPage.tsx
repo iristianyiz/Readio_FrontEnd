@@ -384,7 +384,7 @@ const PreferencesPage: React.FC<PreferencesPageProps> = ({
             size="large"
             startIcon={<ArrowBack />}
             onClick={onBackToSelection}
-            sx={{ px: 4, py: 1.5 }}
+            sx={{ px: 4, py: 1.5, borderRadius: '25px' } }
           >
             Back to Selection
           </Button>
