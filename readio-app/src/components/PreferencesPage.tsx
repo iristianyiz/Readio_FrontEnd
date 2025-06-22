@@ -142,8 +142,7 @@ const PreferencesPage: React.FC<PreferencesPageProps> = ({
       <AppBar position="static" sx={{ 
         mb: 3, 
         backgroundColor: '#e6f3ff', // Lighter blue
-        borderRadius: '15px',
-        margin: '0 10px 24px 10px'
+        borderRadius: '15px'
       }}>
         <Toolbar>
           <Typography 
@@ -227,13 +226,15 @@ const PreferencesPage: React.FC<PreferencesPageProps> = ({
         <span>✨</span>✨Customize Your Readio Experience✨<span>✨</span>
       </Typography>
       <Typography 
-        variant="body1" 
-        color="text.secondary" 
+        variant="h6" 
         align="center" 
         sx={{ 
           mb: 4,
-          fontFamily: '"Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif',
-          color: '#f0f8ff'
+          fontFamily: '"Comic Sans MS", "Chalkboard SE", "Comic Neue", cursive',
+          color: 'rgb(250, 250, 163)',
+          fontWeight: 500,
+          fontSize: '1.2rem',
+          letterSpacing: '0.3px'
         }}
       >
         Help us recommend the perfect books for you by selecting your preferences
@@ -392,7 +393,13 @@ const PreferencesPage: React.FC<PreferencesPageProps> = ({
             size="large"
             onClick={handleSubmit}
             disabled={!isFormValid}
-            sx={{ px: 4, py: 1.5 }}
+            sx={{ 
+              px: 4, 
+              py: 1.5,
+              borderRadius: '25px',
+              fontFamily: '"Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif',
+              fontWeight: 500
+            }}
           >
             Save Preferences
           </Button>

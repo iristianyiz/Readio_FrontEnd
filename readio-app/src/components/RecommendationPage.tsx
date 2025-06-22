@@ -69,7 +69,7 @@ const RecommendationPage: React.FC<RecommendationPageProps> = ({
       overflow: 'hidden',
       boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
     }}>
-      <AppBar position="static" sx={{ mb: 3, backgroundColor: '#e6e6fa' }}>
+      <AppBar position="static" sx={{ mb: 3, backgroundColor: '#e6f3ff' }}>
         <Toolbar>
           <Typography 
             variant="h6" 
@@ -125,7 +125,7 @@ const RecommendationPage: React.FC<RecommendationPageProps> = ({
             sx={{ 
               mb: 3,
               color: '#666666',
-              fontFamily: '"Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif',
+              fontFamily: '"Comic Sans MS", "Roboto", "Helvetica Neue", Arial, sans-serif',
               fontWeight: 400
             }}
           >
