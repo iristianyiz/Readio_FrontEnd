@@ -12,7 +12,7 @@ import {
   IconButton,
   Alert,
 } from '@mui/material';
-import { Logout, Book, Psychology, TrendingUp, AutoAwesome } from '@mui/icons-material';
+import { Logout, Book, Psychology, TrendingUp, AutoAwesome, ArrowBack } from '@mui/icons-material';
 
 interface User {
   email: string;
@@ -31,6 +31,7 @@ interface PreferencesPageProps {
     readingGoal: string;
   }) => void;
   onLogout: () => void;
+  onBackToSelection: () => void;
 }
 
 const genres = [
@@ -89,7 +90,8 @@ const readingGoals = [
 const PreferencesPage: React.FC<PreferencesPageProps> = ({
   user,
   onPreferencesSubmit,
-  onLogout
+  onLogout,
+  onBackToSelection
 }) => {
   const [selectedGenres, setSelectedGenres] = useState<string[]>(
     user?.preferences?.genres || []
@@ -285,8 +287,17 @@ const PreferencesPage: React.FC<PreferencesPageProps> = ({
           </Paper>
         </Box>
 
-        {/* Submit Button */}
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+        {/* Action Buttons */}
+        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 2 }}>
+          <Button
+            variant="outlined"
+            size="large"
+            startIcon={<ArrowBack />}
+            onClick={onBackToSelection}
+            sx={{ px: 4, py: 1.5 }}
+          >
+            Back to Selection
+          </Button>
           <Button
             variant="contained"
             size="large"
