@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   Box,
   Paper,
@@ -14,6 +14,9 @@ import {
 import { 
   Logout, 
   PlayArrow, 
+  Pause,
+  VolumeUp,
+  VolumeOff,
   Book, 
   Psychology, 
   TrendingUp,
@@ -34,6 +37,7 @@ interface RecommendationPageProps {
   user: User | null;
   onLogout: () => void;
   onBackToPreferences: () => void;
+  saveMethod: 'server' | 'local' | null;
 }
 
 const readingGoalTitles = {
@@ -48,15 +52,193 @@ const readingGoalTitles = {
 const RecommendationPage: React.FC<RecommendationPageProps> = ({
   user,
   onLogout,
-  onBackToPreferences
+  onBackToPreferences,
+  saveMethod
 }) => {
   const readingGoal = user?.preferences?.readingGoal;
   const genres = user?.preferences?.genres || [];
   const moods = user?.preferences?.moods || [];
 
+  // Audio player state
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [isAudioMuted, setIsAudioMuted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Mock audio URL - in real app this would come from backend
+  const audioUrl = saveMethod === 'server' 
+    ? 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav' // Real audio from server
+    : 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav'; // Demo audio
+
+  // Mock video URL - in real app this would come from backend
+  const videoUrl = saveMethod === 'server'
+    ? 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4' // Real video from server
+    : 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4'; // Demo video
+
   // Scroll to top when component mounts
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  // Determine video content based on save method
+  const getVideoContent = () => {
+    if (saveMethod === 'server') {
+      return {
+        title: "📖 Personalized Book Recommendations Video",
+        description: "Your AI-generated video based on your preferences",
+        isRealVideo: true,
+        videoUrl: "https://example.com/personalized-video.mp4", // This would be the real video URL from backend
+        status: "✅ Real video from server"
+      };
+    } else {
+      return {
+        title: "📖 Book Recommendations Video (Demo)",
+        description: "Sample video - preferences saved locally",
+        isRealVideo: false,
+        videoUrl: null,
+        status: "⚠️ Demo video - server unavailable"
+      };
+    }
+  };
+
+  const videoContent = getVideoContent();
+
+  // Audio player functions
+  const handlePlayPause = () => {
+    if (videoRef.current && audioRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+        audioRef.current.pause();
+      } else {
+        // Ensure both video and audio start from the same time
+        const currentTime = videoRef.current.currentTime;
+        audioRef.current.currentTime = currentTime;
+        
+        // Start both simultaneously
+        const playPromises = [
+          videoRef.current.play(),
+          audioRef.current.play()
+        ];
+        
+        Promise.all(playPromises)
+          .then(() => {
+            setIsPlaying(true);
+          })
+          .catch((error) => {
+            console.error('Error playing video/audio:', error);
+            setIsPlaying(false);
+          });
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const handleSeek = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newTime = parseFloat(event.target.value);
+    if (videoRef.current && audioRef.current) {
+      videoRef.current.currentTime = newTime;
+      audioRef.current.currentTime = newTime;
+      setCurrentTime(newTime);
+      
+      // If currently playing, ensure both continue playing
+      if (isPlaying) {
+        const playPromises = [
+          videoRef.current.play(),
+          audioRef.current.play()
+        ];
+        
+        Promise.all(playPromises).catch((error) => {
+          console.error('Error resuming after seek:', error);
+        });
+      }
+    }
+  };
+
+  const handleAudioMuteToggle = () => {
+    if (audioRef.current) {
+      audioRef.current.muted = !isAudioMuted;
+      setIsAudioMuted(!isAudioMuted);
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Handle audio time updates
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleAudioTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
+    };
+
+    const handleAudioLoadedMetadata = () => {
+      setDuration(audio.duration);
+    };
+
+    const handleAudioEnded = () => {
+      setIsPlaying(false);
+      setCurrentTime(0);
+    };
+
+    audio.addEventListener('timeupdate', handleAudioTimeUpdate);
+    audio.addEventListener('loadedmetadata', handleAudioLoadedMetadata);
+    audio.addEventListener('ended', handleAudioEnded);
+
+    return () => {
+      audio.removeEventListener('timeupdate', handleAudioTimeUpdate);
+      audio.removeEventListener('loadedmetadata', handleAudioLoadedMetadata);
+      audio.removeEventListener('ended', handleAudioEnded);
+    };
+  }, [audioUrl]);
+
+  // Handle video time updates and synchronization
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleVideoTimeUpdate = () => {
+      setCurrentTime(video.currentTime);
+    };
+
+    const handleVideoLoadedMetadata = () => {
+      setDuration(video.duration);
+    };
+
+    const handleVideoEnded = () => {
+      setIsPlaying(false);
+      setCurrentTime(0);
+      // Reset video and audio to beginning
+      if (videoRef.current) {
+        videoRef.current.currentTime = 0;
+      }
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+      }
+    };
+
+    const handleVideoCanPlay = () => {
+      console.log('Video can play, duration:', video.duration);
+      setDuration(video.duration);
+    };
+
+    video.addEventListener('timeupdate', handleVideoTimeUpdate);
+    video.addEventListener('loadedmetadata', handleVideoLoadedMetadata);
+    video.addEventListener('ended', handleVideoEnded);
+    video.addEventListener('canplay', handleVideoCanPlay);
+
+    return () => {
+      video.removeEventListener('timeupdate', handleVideoTimeUpdate);
+      video.removeEventListener('loadedmetadata', handleVideoLoadedMetadata);
+      video.removeEventListener('ended', handleVideoEnded);
+      video.removeEventListener('canplay', handleVideoCanPlay);
+    };
   }, []);
 
   return (
@@ -155,7 +337,7 @@ const RecommendationPage: React.FC<RecommendationPageProps> = ({
           </Typography>
           
           {/* User Preferences Summary */}
-          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
             <Chip 
               label={`Goal: ${readingGoalTitles[readingGoal as keyof typeof readingGoalTitles] || 'Reading'}`}
               sx={{
@@ -198,6 +380,20 @@ const RecommendationPage: React.FC<RecommendationPageProps> = ({
                 }
               }}
             />
+            <Chip 
+              label={saveMethod === 'server' ? '✅ Server Saved' : '⚠️ Local Save'}
+              sx={{
+                backgroundColor: saveMethod === 'server' ? '#e8f5e8' : '#fff3e0',
+                color: saveMethod === 'server' ? '#2e7d32' : '#f57c00',
+                border: `2px solid ${saveMethod === 'server' ? '#4caf50' : '#ff9800'}`,
+                fontFamily: '"Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif',
+                fontWeight: 500,
+                borderRadius: '20px',
+                '&:hover': {
+                  backgroundColor: saveMethod === 'server' ? '#c8e6c9' : '#ffe0b2'
+                }
+              }}
+            />
           </Box>
         </Box>
 
@@ -220,7 +416,37 @@ const RecommendationPage: React.FC<RecommendationPageProps> = ({
                 }
               }}
             >
-              {/* Video Thumbnail */}
+              {/* Real Video Element */}
+              <video
+                ref={videoRef}
+                controls={false}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  borderRadius: '15px'
+                }}
+                onTimeUpdate={() => {
+                  if (videoRef.current) {
+                    setCurrentTime(videoRef.current.currentTime);
+                  }
+                }}
+                onLoadedMetadata={() => {
+                  if (videoRef.current) {
+                    setDuration(videoRef.current.duration);
+                  }
+                }}
+                onCanPlay={() => {
+                  if (videoRef.current) {
+                    setDuration(videoRef.current.duration);
+                  }
+                }}
+              >
+                <source src={videoUrl} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+              
+              {/* Video Overlay */}
               <Box
                 sx={{
                   position: 'absolute',
@@ -228,10 +454,12 @@ const RecommendationPage: React.FC<RecommendationPageProps> = ({
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  background: 'linear-gradient(45deg, #667eea 0%, #764ba2 100%)',
+                  background: 'rgba(0, 0, 0, 0.3)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  borderRadius: '15px',
+                  pointerEvents: 'none'
                 }}
               >
                 <Typography 
@@ -241,16 +469,37 @@ const RecommendationPage: React.FC<RecommendationPageProps> = ({
                     textAlign: 'center', 
                     px: 2,
                     fontFamily: '"Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif',
-                    fontWeight: 500
+                    fontWeight: 500,
+                    textShadow: '2px 2px 4px rgba(0,0,0,0.7)'
                   }}
                 >
-                  📖 Book Recommendations Video
+                  {videoContent.title}
                 </Typography>
               </Box>
               
-              {/* Play Button */}
+              {/* Status Badge */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 16,
+                  right: 16,
+                  backgroundColor: saveMethod === 'server' ? '#4caf50' : '#ff9800',
+                  color: 'white',
+                  px: 2,
+                  py: 1,
+                  borderRadius: '20px',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  zIndex: 3,
+                }}
+              >
+                {saveMethod === 'server' ? '✅ LIVE' : '⚠️ DEMO'}
+              </Box>
+              
+              {/* Synchronized Play Button */}
               <Box
                 className="play-button"
+                onClick={handlePlayPause}
                 sx={{
                   position: 'absolute',
                   top: '50%',
@@ -265,9 +514,14 @@ const RecommendationPage: React.FC<RecommendationPageProps> = ({
                   justifyContent: 'center',
                   transition: 'transform 0.2s ease-in-out',
                   zIndex: 2,
+                  cursor: 'pointer',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 1)',
+                    transform: 'translate(-50%, -50%) scale(1.1)',
+                  }
                 }}
               >
-                <PlayArrow sx={{ fontSize: 40, color: '#1976d2' }} />
+                {isPlaying ? <Pause sx={{ fontSize: 40, color: '#1976d2' }} /> : <PlayArrow sx={{ fontSize: 40, color: '#1976d2' }} />}
               </Box>
             </Box>
             
@@ -277,35 +531,131 @@ const RecommendationPage: React.FC<RecommendationPageProps> = ({
                 variant="h5" 
                 gutterBottom
                 sx={{
-                  color: '#87CEEB', // Lighter/bright blue
+                  color: saveMethod === 'server' ? '#4caf50' : '#ff9800',
                   fontFamily: '"Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif',
                   fontWeight: 500
                 }}
               >
-                "Must-Read Books for {readingGoalTitles[readingGoal as keyof typeof readingGoalTitles] || 'Your Reading Goal'}"
+                {videoContent.description}
               </Typography>
               <Typography 
                 variant="body1" 
                 sx={{ 
                   mb: 2,
-                  color: '#f0f8ff', // Lighter white color
+                  color: '#f0f8ff',
                   fontFamily: '"Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif',
                   lineHeight: 1.6
                 }}
               >
-                Discover amazing books tailored to your interests in {genres.slice(0, 3).join(', ')} 
-                {genres.length > 3 ? ` and ${genres.length - 3} more genres` : ''}. 
-                Perfect for when you're feeling {moods.slice(0, 2).join(' and ')}.
+                {saveMethod === 'server' 
+                  ? `Discover amazing books tailored to your interests in ${genres.slice(0, 3).join(', ')} 
+                     ${genres.length > 3 ? ` and ${genres.length - 3} more genres` : ''}. 
+                     Perfect for when you're feeling ${moods.slice(0, 2).join(' and ')}.`
+                  : `This is a demo video. When the server is available, you'll see personalized content based on your preferences.`
+                }
               </Typography>
               <Typography 
                 variant="body2" 
                 sx={{
-                  color: '#e6f3ff', // Lighter white color
-                  fontFamily: '"Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif'
+                  color: saveMethod === 'server' ? '#4caf50' : '#ff9800',
+                  fontFamily: '"Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif',
+                  fontWeight: 500
                 }}
               >
-                Duration: 8:45 • Updated: Today
+                {videoContent.status}
               </Typography>
+
+              {/* Audio Player */}
+              <Box sx={{ 
+                mt: 3, 
+                p: 2, 
+                backgroundColor: 'rgba(255, 255, 255, 0.1)', 
+                borderRadius: 2, 
+                border: '1px solid rgba(255, 255, 255, 0.2)' 
+              }}>
+                <Typography variant="subtitle2" color="white" sx={{ mb: 1, fontWeight: 'bold' }}>
+                  🎤 Synchronized Audio Narration
+                </Typography>
+                
+                {/* Hidden audio element */}
+                <audio
+                  ref={audioRef}
+                  src={audioUrl}
+                  preload="metadata"
+                  style={{ display: 'none' }}
+                />
+                
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  {/* Synchronized Status */}
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 1,
+                    backgroundColor: 'rgba(76, 175, 80, 0.2)',
+                    px: 2,
+                    py: 1,
+                    borderRadius: '15px',
+                    border: '1px solid rgba(76, 175, 80, 0.5)'
+                  }}>
+                    <Typography variant="body2" color="#4caf50" sx={{ fontWeight: 'bold' }}>
+                      🔗 SYNCED
+                    </Typography>
+                  </Box>
+                  
+                  {/* Time Display */}
+                  <Typography variant="body2" color="white" sx={{ minWidth: 45 }}>
+                    {formatTime(currentTime)}
+                  </Typography>
+                  
+                  {/* Progress Bar */}
+                  <Box sx={{ flex: 1 }}>
+                    <input
+                      type="range"
+                      min="0"
+                      max={duration || 0}
+                      value={currentTime}
+                      onChange={handleSeek}
+                      style={{
+                        width: '100%',
+                        height: '8px',
+                        borderRadius: '4px',
+                        background: `linear-gradient(to right, #2c5aa0 0%, #2c5aa0 ${(currentTime / (duration || 1)) * 100}%, rgba(255, 255, 255, 0.3) ${(currentTime / (duration || 1)) * 100}%, rgba(255, 255, 255, 0.3) 100%)`,
+                        outline: 'none',
+                        cursor: 'pointer'
+                      }}
+                    />
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+                      <Typography variant="caption" color="rgba(255, 255, 255, 0.7)">
+                        {formatTime(currentTime)}
+                      </Typography>
+                      <Typography variant="caption" color="rgba(255, 255, 255, 0.7)">
+                        {formatTime(duration)}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  
+                  {/* Duration */}
+                  <Typography variant="body2" color="white" sx={{ minWidth: 45 }}>
+                    {formatTime(duration)}
+                  </Typography>
+
+                  {/* Audio Mute Button */}
+                  <IconButton
+                    onClick={handleAudioMuteToggle}
+                    sx={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      color: '#2c5aa0',
+                      '&:hover': { backgroundColor: 'rgba(255, 255, 255, 1)' }
+                    }}
+                  >
+                    {isAudioMuted ? <VolumeOff /> : <VolumeUp />}
+                  </IconButton>
+                </Box>
+                
+                <Typography variant="caption" color="rgba(255, 255, 255, 0.7)" sx={{ mt: 1, display: 'block' }}>
+                  Use the play button above to control both video and audio together
+                </Typography>
+              </Box>
             </Box>
           </Box>
         </Paper>

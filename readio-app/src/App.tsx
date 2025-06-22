@@ -32,6 +32,7 @@ type AppState = 'login' | 'selection' | 'preferences' | 'story-creation' | 'reco
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [appState, setAppState] = useState<AppState>('login');
+  const [lastSaveMethod, setLastSaveMethod] = useState<'server' | 'local' | null>(null);
 
   const handleLogin = (email: string, password: string) => {
     // In a real app, this would validate against a backend
@@ -54,8 +55,9 @@ function App() {
     genres: string[];
     moods: string[];
     readingGoal: string;
-  }) => {
+  }, saveMethod: 'server' | 'local') => {
     setUser(prev => prev ? { ...prev, preferences } : null);
+    setLastSaveMethod(saveMethod);
     setAppState('recommendations');
   };
 
@@ -92,7 +94,7 @@ function App() {
         return (
           <PreferencesPage 
             user={user} 
-            onPreferencesSubmit={handlePreferencesSubmit}
+            onPreferencesSubmit={(preferences, saveMethod) => handlePreferencesSubmit(preferences, saveMethod)}
             onLogout={handleLogout}
             onBackToSelection={handleBackToSelection}
           />
@@ -111,6 +113,7 @@ function App() {
             user={user}
             onLogout={handleLogout}
             onBackToPreferences={handleBackToPreferences}
+            saveMethod={lastSaveMethod}
           />
         );
       default:
