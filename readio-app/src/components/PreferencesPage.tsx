@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Paper,
@@ -30,7 +30,7 @@ interface PreferencesPageProps {
     genres: string[];
     moods: string[];
     readingGoal: string;
-  }) => void;
+  }, saveMethod: 'server' | 'local') => void;
   onLogout: () => void;
   onBackToSelection: () => void;
 }
@@ -106,6 +106,12 @@ const PreferencesPage: React.FC<PreferencesPageProps> = ({
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [saveMethod, setSaveMethod] = useState<'server' | 'local' | null>(null);
+
+  // Reset save method when preferences change
+  useEffect(() => {
+    setSaveMethod(null);
+  }, [selectedGenres, selectedMoods, selectedReadingGoal]);
 
   const handleGenreToggle = (genre: string) => {
     setSelectedGenres(prev =>
@@ -157,12 +163,13 @@ const PreferencesPage: React.FC<PreferencesPageProps> = ({
       const data = await response.json();
       console.log('Backend response:', data);
       
-      // Only proceed if backend successfully saves the data
+      // Backend save successful
+      setSaveMethod('server');
       onPreferencesSubmit({
         genres: selectedGenres,
         moods: selectedMoods,
         readingGoal: selectedReadingGoal,
-      });
+      }, 'server');
 
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
@@ -170,20 +177,31 @@ const PreferencesPage: React.FC<PreferencesPageProps> = ({
     } catch (error) {
       console.error('Error sending user preferences to backend:', error);
       
-      // Show error message to user instead of proceeding
+      // Show error message to user but still proceed with fallover
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
-          setErrorMessage('Request timed out. Please check your connection and try again.');
+          setErrorMessage('Request timed out. Your preferences will be saved locally and you can continue.');
         } else if (error.message.includes('Failed to fetch')) {
-          setErrorMessage('Unable to connect to server. Please check your internet connection and try again.');
+          setErrorMessage('Unable to connect to server. Your preferences will be saved locally and you can continue.');
         } else {
-          setErrorMessage(`Error saving preferences: ${error.message}`);
+          setErrorMessage(`Error saving to server: ${error.message}. Your preferences will be saved locally and you can continue.`);
         }
       } else {
-        setErrorMessage('An unexpected error occurred. Please try again.');
+        setErrorMessage('An unexpected error occurred. Your preferences will be saved locally and you can continue.');
       }
       
-      // Don't proceed to next page - user stays on preferences page
+      // FALLOVER: Proceed to next page even if backend save fails
+      // Save preferences locally and continue
+      setSaveMethod('local');
+      onPreferencesSubmit({
+        genres: selectedGenres,
+        moods: selectedMoods,
+        readingGoal: selectedReadingGoal,
+      }, 'local');
+
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+      
     } finally {
       setIsSubmitting(false);
     }
@@ -229,7 +247,10 @@ const PreferencesPage: React.FC<PreferencesPageProps> = ({
 
       {showSuccess && (
         <Alert severity="success" sx={{ mb: 3 }}>
-          Preferences saved successfully!
+          {saveMethod === 'server' 
+            ? 'Preferences saved successfully to server!' 
+            : 'Preferences saved locally! You can continue with your experience.'
+          }
         </Alert>
       )}
 
@@ -461,7 +482,7 @@ const PreferencesPage: React.FC<PreferencesPageProps> = ({
               fontWeight: 500
             }}
           >
-            {isSubmitting ? 'Saving to Server...' : 'Save Preferences'}
+            {isSubmitting ? 'Saving...' : 'Save Preferences & Continue'}
           </Button>
         </Box>
       </Box>
