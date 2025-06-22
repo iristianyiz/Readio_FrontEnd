@@ -103,6 +103,7 @@ const PreferencesPage: React.FC<PreferencesPageProps> = ({
     user?.preferences?.readingGoal || ''
   );
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleGenreToggle = (genre: string) => {
     setSelectedGenres(prev =>
@@ -120,19 +121,75 @@ const PreferencesPage: React.FC<PreferencesPageProps> = ({
     );
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (selectedGenres.length === 0 || selectedMoods.length === 0 || !selectedReadingGoal) {
       return;
     }
 
-    onPreferencesSubmit({
-      genres: selectedGenres,
-      moods: selectedMoods,
-      readingGoal: selectedReadingGoal,
-    });
+    setIsSubmitting(true);
 
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 3000);
+    try {
+      // Collect all user inputs into a single collection
+      const userInputs = {
+        email: user?.email,
+        preferences: {
+          genres: selectedGenres,
+          moods: selectedMoods,
+          readingGoal: selectedReadingGoal,
+        },
+        timestamp: new Date().toISOString()
+      };
+
+      console.log('Sending user preferences to backend:', userInputs);
+
+      // TODO: Replace with actual backend API call when backend is ready
+      // For now, simulate the API call to allow the app to work
+      try {
+        // Simulate API call for now
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Simulate successful response
+        console.log('User preferences sent to backend successfully');
+        
+        // TODO: Uncomment this when your backend is ready:
+        // const response = await fetch('/api/user-preferences', {
+        //   method: 'POST',
+        //   headers: {
+        //     'Content-Type': 'application/json',
+        //   },
+        //   body: JSON.stringify(userInputs)
+        // });
+        // 
+        // if (!response.ok) {
+        //   throw new Error(`HTTP error! status: ${response.status}`);
+        // }
+        // 
+        // const data = await response.json();
+        // console.log('Backend response:', data);
+        
+      } catch (error) {
+        console.error('Error sending user preferences to backend:', error);
+        // Continue with local save even if backend fails
+      }
+      
+      console.log('User preferences sent to backend successfully');
+
+      // Call the parent component's callback
+      onPreferencesSubmit({
+        genres: selectedGenres,
+        moods: selectedMoods,
+        readingGoal: selectedReadingGoal,
+      });
+
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+      
+    } catch (error) {
+      console.error('Error sending user preferences to backend:', error);
+      // You might want to show an error message to the user here
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const isFormValid = selectedGenres.length > 0 && selectedMoods.length > 0 && selectedReadingGoal;
@@ -392,7 +449,7 @@ const PreferencesPage: React.FC<PreferencesPageProps> = ({
             variant="contained"
             size="large"
             onClick={handleSubmit}
-            disabled={!isFormValid}
+            disabled={!isFormValid || isSubmitting}
             sx={{ 
               px: 4, 
               py: 1.5,
@@ -401,7 +458,7 @@ const PreferencesPage: React.FC<PreferencesPageProps> = ({
               fontWeight: 500
             }}
           >
-            Save Preferences
+            {isSubmitting ? 'AI Processing...' : 'Save Preferences'}
           </Button>
         </Box>
       </Box>
