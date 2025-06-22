@@ -12,7 +12,7 @@ import {
   IconButton,
   Alert,
 } from '@mui/material';
-import { Logout, Book, Psychology, TrendingUp } from '@mui/icons-material';
+import { Logout, Book, Psychology, TrendingUp, AutoAwesome } from '@mui/icons-material';
 
 interface User {
   email: string;
@@ -77,6 +77,12 @@ const readingGoals = [
     title: 'Build a Reading Habit',
     description: 'I\'m working on making regular reading part of my routine.',
     icon: <Book />
+  },
+  {
+    id: 'foster-imagination',
+    title: 'Foster Imagination & Creativity',
+    description: 'I want to explore creative worlds and spark my imagination.',
+    icon: <AutoAwesome />
   }
 ];
 

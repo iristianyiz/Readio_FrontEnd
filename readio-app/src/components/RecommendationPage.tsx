@@ -40,7 +40,8 @@ const readingGoalTitles = {
   'improve-skills': 'Improve Skills',
   'relaxation': 'Read for Relaxation',
   'stay-informed': 'Stay Informed',
-  'build-habit': 'Build a Reading Habit'
+  'build-habit': 'Build a Reading Habit',
+  'foster-imagination': 'Foster Imagination & Creativity'
 };
 
 const RecommendationPage: React.FC<RecommendationPageProps> = ({
