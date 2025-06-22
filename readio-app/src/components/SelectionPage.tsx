@@ -161,7 +161,7 @@ const SelectionPage: React.FC<SelectionPageProps> = ({
                   fontWeight: 600
                 }}
               >
-                1. Customize Your Reading Experience
+                1. Customize Your ReelReads Experience
               </Typography>
               <Typography 
                 variant="body1" 
