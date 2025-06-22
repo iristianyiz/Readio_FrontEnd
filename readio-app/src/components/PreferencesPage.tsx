@@ -37,7 +37,8 @@ const genres = [
   'Fiction', 'Non-Fiction', 'Mystery', 'Romance', 'Science Fiction',
   'Fantasy', 'Biography', 'History', 'Self-Help', 'Business',
   'Technology', 'Philosophy', 'Poetry', 'Drama', 'Comedy',
-  'Thriller', 'Horror', 'Adventure', 'Travel', 'Cooking'
+  'Thriller', 'Horror', 'Adventure', 'Travel', 'Cooking',
+  'Children\'s - picture books', 'Children\'s - science'
 ];
 
 const moods = [
