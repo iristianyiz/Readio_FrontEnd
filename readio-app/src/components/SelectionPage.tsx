@@ -122,7 +122,7 @@ const SelectionPage: React.FC<SelectionPageProps> = ({
         maxWidth: 800,
         mx: 'auto'
       }}>
-        {/* Option 1: Customize Your Reading Experience */}
+        {/* Option 1: Customize Your ReelReads Experience */}
         <Card
           sx={{
             cursor: 'pointer',
