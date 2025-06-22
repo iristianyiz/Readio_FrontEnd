@@ -186,12 +186,43 @@ const PreferencesPage: React.FC<PreferencesPageProps> = ({
         sx={{
           fontFamily: '"Lora", Georgia, "Times New Roman", serif',
           fontWeight: 600,
-          color: 'rgb(46, 93, 163)',
           letterSpacing: '0.5px',
-          mb: 2
+          mb: 2,
+          background: 'linear-gradient(90deg, #87CEEB 0%, #6495ED 25%, rgb(46, 93, 163) 50%, #6495ED 75%, #87CEEB 100%)',
+          backgroundSize: '200% 100%',
+          backgroundClip: 'text',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          animation: 'colorFlow 8s ease-in-out infinite',
+          '& span': {
+            display: 'inline-block',
+            animation: 'wave 2s ease-in-out infinite'
+          },
+          '@keyframes colorFlow': {
+            '0%': {
+              backgroundPosition: '0% 50%'
+            },
+            '50%': {
+              backgroundPosition: '100% 50%'
+            },
+            '100%': {
+              backgroundPosition: '0% 50%'
+            }
+          },
+          '@keyframes wave': {
+            '0%, 100%': {
+              transform: 'translateY(0px)'
+            },
+            '25%': {
+              transform: 'translateY(-3px)'
+            },
+            '75%': {
+              transform: 'translateY(3px)'
+            }
+          }
         }}
       >
-        ✨Customize Your Readio Experience✨
+        <span>✨</span>✨Customize Your Readio Experience✨<span>✨</span>
       </Typography>
       <Typography 
         variant="body1" 
