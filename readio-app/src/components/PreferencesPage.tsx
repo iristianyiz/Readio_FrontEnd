@@ -13,6 +13,7 @@ import {
   Alert,
 } from '@mui/material';
 import { Logout, Book, Psychology, TrendingUp, AutoAwesome, ArrowBack } from '@mui/icons-material';
+import { API_CONFIG, apiRequest } from '../config/api';
 
 interface User {
   email: string;
@@ -104,6 +105,7 @@ const PreferencesPage: React.FC<PreferencesPageProps> = ({
   );
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   const handleGenreToggle = (genre: string) => {
     setSelectedGenres(prev =>
@@ -127,6 +129,7 @@ const PreferencesPage: React.FC<PreferencesPageProps> = ({
     }
 
     setIsSubmitting(true);
+    setErrorMessage(''); // Clear any previous errors
 
     try {
       // Collect all user inputs into a single collection
@@ -142,39 +145,19 @@ const PreferencesPage: React.FC<PreferencesPageProps> = ({
 
       console.log('Sending user preferences to backend:', userInputs);
 
-      // TODO: Replace with actual backend API call when backend is ready
-      // For now, simulate the API call to allow the app to work
-      try {
-        // Simulate API call for now
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        // Simulate successful response
-        console.log('User preferences sent to backend successfully');
-        
-        // TODO: Uncomment this when your backend is ready:
-        // const response = await fetch('/api/user-preferences', {
-        //   method: 'POST',
-        //   headers: {
-        //     'Content-Type': 'application/json',
-        //   },
-        //   body: JSON.stringify(userInputs)
-        // });
-        // 
-        // if (!response.ok) {
-        //   throw new Error(`HTTP error! status: ${response.status}`);
-        // }
-        // 
-        // const data = await response.json();
-        // console.log('Backend response:', data);
-        
-      } catch (error) {
-        console.error('Error sending user preferences to backend:', error);
-        // Continue with local save even if backend fails
-      }
-      
-      console.log('User preferences sent to backend successfully');
+      const response = await apiRequest(API_CONFIG.ENDPOINTS.USER_PREFERENCES, {
+        method: 'POST',
+        body: JSON.stringify(userInputs)
+      });
 
-      // Call the parent component's callback
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Backend response:', data);
+      
+      // Only proceed if backend successfully saves the data
       onPreferencesSubmit({
         genres: selectedGenres,
         moods: selectedMoods,
@@ -186,7 +169,21 @@ const PreferencesPage: React.FC<PreferencesPageProps> = ({
       
     } catch (error) {
       console.error('Error sending user preferences to backend:', error);
-      // You might want to show an error message to the user here
+      
+      // Show error message to user instead of proceeding
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          setErrorMessage('Request timed out. Please check your connection and try again.');
+        } else if (error.message.includes('Failed to fetch')) {
+          setErrorMessage('Unable to connect to server. Please check your internet connection and try again.');
+        } else {
+          setErrorMessage(`Error saving preferences: ${error.message}`);
+        }
+      } else {
+        setErrorMessage('An unexpected error occurred. Please try again.');
+      }
+      
+      // Don't proceed to next page - user stays on preferences page
     } finally {
       setIsSubmitting(false);
     }
@@ -233,6 +230,12 @@ const PreferencesPage: React.FC<PreferencesPageProps> = ({
       {showSuccess && (
         <Alert severity="success" sx={{ mb: 3 }}>
           Preferences saved successfully!
+        </Alert>
+      )}
+
+      {errorMessage && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {errorMessage}
         </Alert>
       )}
 
@@ -458,7 +461,7 @@ const PreferencesPage: React.FC<PreferencesPageProps> = ({
               fontWeight: 500
             }}
           >
-            {isSubmitting ? 'AI Processing...' : 'Save Preferences'}
+            {isSubmitting ? 'Saving to Server...' : 'Save Preferences'}
           </Button>
         </Box>
       </Box>
