@@ -137,15 +137,36 @@ const PreferencesPage: React.FC<PreferencesPageProps> = ({
 
   return (
     <Box>
-      <AppBar position="static" sx={{ mb: 3 }}>
+      <AppBar position="static" sx={{ 
+        mb: 3, 
+        backgroundColor: '#e6f3ff', // Lighter blue
+        borderRadius: '15px',
+        margin: '0 10px 24px 10px'
+      }}>
         <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          <Typography 
+            variant="h6" 
+            component="div" 
+            sx={{ 
+              flexGrow: 1,
+              color: '#2c5aa0', // Darker blue text for contrast
+              fontFamily: '"Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif',
+              fontWeight: 500
+            }}
+          >
             Readio - Reading Preferences
           </Typography>
-          <Typography variant="body2" sx={{ mr: 2 }}>
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              mr: 2,
+              color: '#2c5aa0', // Darker blue text for contrast
+              fontFamily: '"Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif'
+            }}
+          >
             Welcome, {user?.email}
           </Typography>
-          <IconButton color="inherit" onClick={onLogout}>
+          <IconButton color="inherit" onClick={onLogout} sx={{ color: '#2c5aa0' }}>
             <Logout />
           </IconButton>
         </Toolbar>
@@ -157,10 +178,31 @@ const PreferencesPage: React.FC<PreferencesPageProps> = ({
         </Alert>
       )}
 
-      <Typography variant="h4" component="h1" gutterBottom align="center">
-        Customize Your Reading Experience
+      <Typography 
+        variant="h3" 
+        component="h1" 
+        gutterBottom 
+        align="center"
+        sx={{
+          fontFamily: '"Lora", Georgia, "Times New Roman", serif',
+          fontWeight: 600,
+          color: 'rgb(46, 93, 163)',
+          letterSpacing: '0.5px',
+          mb: 2
+        }}
+      >
+        ✨Customize Your Readio Experience✨
       </Typography>
-      <Typography variant="body1" color="text.secondary" align="center" sx={{ mb: 4 }}>
+      <Typography 
+        variant="body1" 
+        color="text.secondary" 
+        align="center" 
+        sx={{ 
+          mb: 4,
+          fontFamily: '"Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif',
+          color: '#f0f8ff'
+        }}
+      >
         Help us recommend the perfect books for you by selecting your preferences
       </Typography>
 
@@ -169,7 +211,12 @@ const PreferencesPage: React.FC<PreferencesPageProps> = ({
         <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 4 }}>
           {/* Genres Section */}
           <Box sx={{ flex: 1 }}>
-            <Paper elevation={2} sx={{ p: 3, height: 'fit-content' }}>
+            <Paper elevation={2} sx={{ 
+              p: 3, 
+              height: 'fit-content',
+              backgroundColor: '#e6f3ff', 
+              borderRadius: '20px'
+            }}>
               <Typography variant="h6" gutterBottom>
                 What genres interest you?
               </Typography>
@@ -212,7 +259,12 @@ const PreferencesPage: React.FC<PreferencesPageProps> = ({
 
           {/* Moods Section */}
           <Box sx={{ flex: 1 }}>
-            <Paper elevation={2} sx={{ p: 3, height: 'fit-content' }}>
+            <Paper elevation={2} sx={{ 
+              p: 3, 
+              height: 'fit-content',
+              backgroundColor: '#e6f3ff', 
+              borderRadius: '20px'
+            }}>
               <Typography variant="h6" gutterBottom>
                 What mood are you usually in when reading?
               </Typography>
@@ -242,7 +294,11 @@ const PreferencesPage: React.FC<PreferencesPageProps> = ({
 
         {/* Reading Goals Section */}
         <Box>
-          <Paper elevation={2} sx={{ p: 3 }}>
+          <Paper elevation={2} sx={{ 
+            p: 3,
+            backgroundColor: '#e6f3ff', 
+            borderRadius: '20px'
+          }}>
             <Typography variant="h6" gutterBottom>
               What's your primary reading goal?
             </Typography>
@@ -261,6 +317,8 @@ const PreferencesPage: React.FC<PreferencesPageProps> = ({
                     cursor: 'pointer',
                     border: selectedReadingGoal === goal.id ? 2 : 1,
                     borderColor: selectedReadingGoal === goal.id ? 'primary.main' : 'divider',
+                    backgroundColor: '#ffffff', // White background for cards
+                    borderRadius: '15px',
                     '&:hover': {
                       borderColor: 'primary.main',
                       boxShadow: 2,
