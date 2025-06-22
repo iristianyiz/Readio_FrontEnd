@@ -79,7 +79,6 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isAudioMuted, setIsAudioMuted] = useState(false);
-  const [processingError, setProcessingError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -99,126 +98,34 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
     );
   };
 
-  const handleVideoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVideoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       console.log('Video uploaded:', file.name);
       setVideoFile(file);
-      
-      // Start processing
+      // Start processing simulation
       setIsProcessing(true);
       setProcessingProgress(0);
       console.log('Processing started');
       
-      try {
-        // Create FormData to send video file
-        const formData = new FormData();
-        formData.append('video', file);
-        formData.append('email', user?.email || '');
-        formData.append('timestamp', new Date().toISOString());
-        
-        console.log('Sending video to backend for processing...');
-        
-        // Send video to backend for processing
-        const response = await fetch('/api/process-video', {
-          method: 'POST',
-          body: formData
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log('Backend response:', data);
-        
-        // Check if processing is complete
-        if (data.status === 'processing') {
-          // Poll for completion
-          await pollForCompletion(data.taskId);
-        } else if (data.status === 'completed') {
-          // Processing completed immediately
-          setAudioUrl(data.audioUrl);
-          setDuration(data.duration || 180);
-          setProcessingProgress(100);
-        }
-        
-      } catch (error) {
-        console.error('Error processing video:', error);
-        setProcessingError(error instanceof Error ? error.message : 'Failed to process video. Please try again.');
-        // Fallback to simulation for now
-        simulateProcessing();
-      } finally {
-        setIsProcessing(false);
-      }
-    }
-  };
-
-  // Function to poll backend for processing completion
-  const pollForCompletion = async (taskId: string) => {
-    const maxAttempts = 60; // 5 minutes with 5-second intervals
-    let attempts = 0;
-    
-    const poll = async () => {
-      try {
-        const response = await fetch(`/api/processing-status/${taskId}`);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log('Polling response:', data);
-        
-        if (data.status === 'completed') {
-          // Processing completed
-          setAudioUrl(data.audioUrl);
-          setDuration(data.duration || 180);
-          setProcessingProgress(100);
-          return;
-        } else if (data.status === 'processing') {
-          // Update progress
-          setProcessingProgress(data.progress || 0);
-          
-          // Continue polling
-          if (attempts < maxAttempts) {
-            attempts++;
-            setTimeout(poll, 5000); // Poll every 5 seconds
-          } else {
-            throw new Error('Processing timeout');
+      // Simulate processing progress
+      const interval = setInterval(() => {
+        setProcessingProgress((prev) => {
+          const newProgress = prev + 10;
+          console.log('Progress:', newProgress);
+          if (newProgress >= 100) {
+            clearInterval(interval);
+            setIsProcessing(false);
+            console.log('Processing completed');
+            // Generate mock audio URL and set duration
+            setAudioUrl('https://www.soundjay.com/misc/sounds/bell-ringing-05.wav');
+            setDuration(180); // 3 minutes in seconds
+            return 100;
           }
-        } else if (data.status === 'failed') {
-          throw new Error(data.error || 'Processing failed');
-        }
-        
-      } catch (error) {
-        console.error('Error polling for completion:', error);
-        // Fallback to simulation
-        simulateProcessing();
-      }
-    };
-    
-    poll();
-  };
-
-  // Fallback simulation function
-  const simulateProcessing = () => {
-    const interval = setInterval(() => {
-      setProcessingProgress((prev) => {
-        const newProgress = prev + 10;
-        console.log('Simulated progress:', newProgress);
-        if (newProgress >= 100) {
-          clearInterval(interval);
-          setIsProcessing(false);
-          console.log('Simulated processing completed');
-          // Generate mock audio URL and set duration
-          setAudioUrl('https://www.soundjay.com/misc/sounds/bell-ringing-05.wav');
-          setDuration(180); // 3 minutes in seconds
-          return 100;
-        }
-        return newProgress;
-      });
-    }, 500);
+          return newProgress;
+        });
+      }, 500);
+    }
   };
 
   const handleSubmit = () => {
@@ -613,33 +520,10 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
               </Typography>
               
               {isProcessing && (
-                <Box sx={{ mt: 2, p: 3, backgroundColor: '#f0f8ff', borderRadius: 2, border: '1px solid', borderColor: '#87CEEB' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <Box sx={{ 
-                      width: 20, 
-                      height: 20, 
-                      borderRadius: '50%', 
-                      backgroundColor: '#2c5aa0',
-                      animation: 'pulse 1.5s ease-in-out infinite',
-                      mr: 2,
-                      '@keyframes pulse': {
-                        '0%': { opacity: 1 },
-                        '50%': { opacity: 0.5 },
-                        '100%': { opacity: 1 }
-                      }
-                    }} />
-                    <Typography variant="body1" color="primary" fontWeight="bold">
-                      AI Processing Your Video...
-                    </Typography>
-                  </Box>
-                  
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    🎬 Analyzing video content and generating AI voiceover narration
-                  </Typography>
-                  
+                <Box sx={{ mt: 2, p: 2, backgroundColor: 'grey.50', borderRadius: 2, border: '1px solid', borderColor: 'grey.200' }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                     <Typography variant="body2" color="text.secondary">
-                      Processing progress
+                      Processing video & generating AI voiceover...
                     </Typography>
                     <Typography variant="body2" color="primary" fontWeight="bold">
                       {processingProgress}%
@@ -649,38 +533,15 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
                     variant="determinate" 
                     value={processingProgress} 
                     sx={{ 
-                      height: 12, 
-                      borderRadius: 6,
-                      backgroundColor: '#e3f2fd',
+                      height: 10, 
+                      borderRadius: 5,
+                      backgroundColor: 'grey.300',
                       '& .MuiLinearProgress-bar': {
-                        borderRadius: 6,
-                        background: 'linear-gradient(90deg, #2c5aa0 0%, #4CAF50 100%)',
+                        borderRadius: 5,
+                        backgroundColor: 'primary.main',
                       }
                     }}
                   />
-                  
-                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block', fontStyle: 'italic' }}>
-                    This may take a few minutes depending on video length and complexity
-                  </Typography>
-                </Box>
-              )}
-
-              {processingError && (
-                <Box sx={{ mt: 2, p: 3, backgroundColor: '#ffebee', borderRadius: 2, border: '1px solid', borderColor: '#f44336' }}>
-                  <Typography variant="body1" color="error" fontWeight="bold" sx={{ mb: 1 }}>
-                    ❌ Processing Error
-                  </Typography>
-                  <Typography variant="body2" color="error">
-                    {processingError}
-                  </Typography>
-                  <Button 
-                    variant="outlined" 
-                    size="small" 
-                    onClick={() => setProcessingError(null)}
-                    sx={{ mt: 1 }}
-                  >
-                    Dismiss
-                  </Button>
                 </Box>
               )}
 
@@ -729,7 +590,7 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
                           width: '100%',
                           height: '8px',
                           borderRadius: '4px',
-                          background: `linear-gradient(to right, #2c5aa0 0%, #2c5aa0 ${(currentTime / (duration || 1)) * 100}%, #ddd ${(currentTime / (duration || 1)) * 100}%, #ddd 100%)`,
+                          background: `linear-gradient(to right,rgb(86, 131, 198) 0%,rgb(64, 111, 180) ${(currentTime / (duration || 1)) * 100}%, #ddd ${(currentTime / (duration || 1)) * 100}%, #ddd 100%)`,
                           outline: 'none',
                           cursor: 'pointer'
                         }}
@@ -777,15 +638,15 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
                         px: 4,
                         py: 2,
                         fontSize: '1.1rem',
-                        backgroundColor: '#2c5aa0',
+                        backgroundColor: 'rgb(100, 149, 237)',
                         borderRadius: '25px',
                         fontFamily: '"Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif',
                         fontWeight: 500,
                         boxShadow: '0 4px 12px rgba(44, 90, 160, 0.3)',
                         '&:hover': { 
-                          backgroundColor: '#1e3a8a',
+                          backgroundColor: 'rgb(137, 207, 240)',
                           transform: 'translateY(-2px)',
-                          boxShadow: '0 6px 16px rgba(44, 90, 160, 0.4)',
+                          boxShadow: '0 6px 16px rgba(90, 132, 196, 0.4)',
                           transition: 'all 0.3s ease'
                         }
                       }}
@@ -1016,9 +877,9 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
                 py: 2.5,
                 px: 4,
                 fontSize: '1.1rem',
-                fontFamily: '"Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif',
+                fontFamily: '"Segoe UI", "TT Neoris", "Helvetica Neue", Arial, sans-serif',
                 fontWeight: 500,
-                background: 'linear-gradient(45deg, #FF6B6B 0%, #4ECDC4 25%, #45B7D1 50%, #96CEB4 75%, #FFEAA7 100%)',
+                background: 'linear-gradient(45deg, #FF6B6B 0%,rgb(83, 221, 212) 25%,rgb(75, 198, 226) 50%,rgb(157, 218, 189) 75%,rgb(255, 236, 172) 100%)',
                 backgroundSize: '200% 200%',
                 animation: 'gradientShift 3s ease infinite',
                 boxShadow: '0 6px 20px rgba(255, 107, 107, 0.4)',
