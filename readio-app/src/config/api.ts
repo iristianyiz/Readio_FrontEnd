@@ -13,6 +13,7 @@ export const API_CONFIG = {
     USER_SIGNUP: '/api/auth/signup',
     BOOK_RECOMMENDATIONS: '/api/recommendations',
     STORY_CREATION: '/api/story-creation',
+    AUDIO_GENERATION: '/api/audio-generation',
   },
   
   // Request timeout in milliseconds

@@ -30,6 +30,7 @@ import {
   Facebook,
   Instagram
 } from '@mui/icons-material';
+import { API_CONFIG, apiRequest } from '../config/api';
 
 interface User {
   email: string;
@@ -82,6 +83,12 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
+  // Backend audio generation state
+  const [audioGenerationError, setAudioGenerationError] = useState<string>('');
+  const [isBackendProcessing, setIsBackendProcessing] = useState(false);
+  const [backendAudioUrl, setBackendAudioUrl] = useState<string | null>(null);
+  const [downloadedAudioBlob, setDownloadedAudioBlob] = useState<Blob | null>(null);
+
   const handleGenreToggle = (genre: string) => {
     setSelectedGenres(prev =>
       prev.includes(genre)
@@ -103,28 +110,104 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
     if (file) {
       console.log('Video uploaded:', file.name);
       setVideoFile(file);
-      // Start processing simulation
-      setIsProcessing(true);
-      setProcessingProgress(0);
-      console.log('Processing started');
       
-      // Simulate processing progress
-      const interval = setInterval(() => {
+      // Start real backend processing
+      generateAudioFromBackend(file);
+    }
+  };
+
+  const generateAudioFromBackend = async (videoFile: File) => {
+    setIsBackendProcessing(true);
+    setProcessingProgress(0);
+    setAudioGenerationError('');
+    console.log('Starting backend audio generation...');
+
+    try {
+      // Create FormData to send video file
+      const formData = new FormData();
+      formData.append('video', videoFile);
+      formData.append('timestamp', new Date().toISOString());
+
+      // Simulate progress updates while backend processes
+      const progressInterval = setInterval(() => {
         setProcessingProgress((prev) => {
           const newProgress = prev + 10;
-          console.log('Progress:', newProgress);
-          if (newProgress >= 100) {
-            clearInterval(interval);
-            setIsProcessing(false);
-            console.log('Processing completed');
-            // Generate mock audio URL and set duration
-            setAudioUrl('https://www.soundjay.com/misc/sounds/bell-ringing-05.wav');
-            setDuration(180); // 3 minutes in seconds
-            return 100;
+          if (newProgress >= 90) {
+            clearInterval(progressInterval);
+            return 90; // Stop at 90% until backend responds
           }
           return newProgress;
         });
-      }, 500);
+      }, 1000);
+
+      // Make API call to backend for audio generation
+      const response = await apiRequest(API_CONFIG.ENDPOINTS.AUDIO_GENERATION, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          // Don't set Content-Type for FormData, let browser set it
+        }
+      });
+
+      clearInterval(progressInterval);
+
+      if (!response.ok) {
+        throw new Error(`Backend error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Backend audio generation response:', data);
+
+      // Download audio from S3 and convert to blob URL
+      if (data.audioUrl) {
+        try {
+          const blobUrl = await downloadAndPlayAudio(data.audioUrl);
+          
+          // Set progress to 100% and use downloaded audio
+          setProcessingProgress(100);
+          setBackendAudioUrl(data.audioUrl);
+          setAudioUrl(blobUrl); // Use blob URL for playback
+          setDuration(data.duration || 180);
+          
+          console.log('Audio downloaded and ready for playback');
+        } catch (downloadError) {
+          console.error('Error downloading audio from S3:', downloadError);
+          setAudioGenerationError(`Audio download failed: ${downloadError instanceof Error ? downloadError.message : 'Unknown error'}`);
+          
+          // Fallback to demo audio
+          setAudioUrl('https://www.soundjay.com/misc/sounds/bell-ringing-05.wav');
+          setDuration(180);
+          setProcessingProgress(100);
+        }
+      } else {
+        throw new Error('No audio URL received from backend');
+      }
+
+    } catch (error) {
+      console.error('Error generating audio from backend:', error);
+      
+      // Set error message
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          setAudioGenerationError('Request timed out. Please try again.');
+        } else if (error.message.includes('Failed to fetch')) {
+          setAudioGenerationError('Unable to connect to server. Please check your connection.');
+        } else {
+          setAudioGenerationError(`Audio generation failed: ${error.message}`);
+        }
+      } else {
+        setAudioGenerationError('An unexpected error occurred during audio generation.');
+      }
+
+      // Fallback to demo audio
+      console.log('Falling back to demo audio');
+      setAudioUrl('https://www.soundjay.com/misc/sounds/bell-ringing-05.wav');
+      setDuration(180);
+      setProcessingProgress(100);
+
+    } finally {
+      setIsBackendProcessing(false);
+      setIsProcessing(false);
     }
   };
 
@@ -316,6 +399,54 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
       document.execCommand('copy');
       document.body.removeChild(textArea);
       alert('Share text copied to clipboard! You can now paste it on Instagram.');
+    }
+  };
+
+  // Function to download audio from S3 and convert to blob URL
+  const downloadAndPlayAudio = async (downloadUrl: string): Promise<string> => {
+    try {
+      console.log('Downloading audio from S3:', downloadUrl);
+      
+      // Clean up previous blob URL if it exists
+      if (audioUrl && audioUrl.startsWith('blob:')) {
+        cleanupBlobUrl(audioUrl);
+      }
+      
+      // Download the audio file
+      const response = await fetch(downloadUrl);
+      if (!response.ok) {
+        throw new Error(`Download failed: ${response.status} ${response.statusText}`);
+      }
+      
+      // Convert to blob
+      const audioBlob = await response.blob();
+      setDownloadedAudioBlob(audioBlob);
+      
+      // Create blob URL for playback
+      const blobUrl = URL.createObjectURL(audioBlob);
+      console.log('Audio downloaded and converted to blob URL:', blobUrl);
+      
+      return blobUrl;
+    } catch (error) {
+      console.error('Error downloading audio:', error);
+      throw error;
+    }
+  };
+
+  // Cleanup blob URLs when component unmounts or audio changes
+  useEffect(() => {
+    return () => {
+      // Cleanup blob URLs to prevent memory leaks
+      if (audioUrl && audioUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(audioUrl);
+      }
+    };
+  }, [audioUrl]);
+
+  // Cleanup function for blob URLs
+  const cleanupBlobUrl = (url: string) => {
+    if (url && url.startsWith('blob:')) {
+      URL.revokeObjectURL(url);
     }
   };
 
@@ -523,7 +654,12 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
                 <Box sx={{ mt: 2, p: 2, backgroundColor: 'grey.50', borderRadius: 2, border: '1px solid', borderColor: 'grey.200' }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                     <Typography variant="body2" color="text.secondary">
-                      Processing video & generating AI voiceover...
+                      {isBackendProcessing 
+                        ? processingProgress >= 90 
+                          ? 'Downloading audio from S3...' 
+                          : 'Processing video & generating AI voiceover with backend...' 
+                        : 'Processing video & generating AI voiceover...'
+                      }
                     </Typography>
                     <Typography variant="body2" color="primary" fontWeight="bold">
                       {processingProgress}%
@@ -538,19 +674,55 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
                       backgroundColor: 'grey.300',
                       '& .MuiLinearProgress-bar': {
                         borderRadius: 5,
-                        backgroundColor: 'primary.main',
+                        backgroundColor: isBackendProcessing ? 'success.main' : 'primary.main',
                       }
                     }}
                   />
+                  {isBackendProcessing && (
+                    <Typography variant="caption" color="success.main" sx={{ mt: 1, display: 'block' }}>
+                      {processingProgress >= 90 
+                        ? '📥 Downloading audio file...' 
+                        : '🔗 Connected to backend server'
+                      }
+                    </Typography>
+                  )}
                 </Box>
+              )}
+
+              {audioGenerationError && (
+                <Alert severity="warning" sx={{ mt: 2 }}>
+                  <Typography variant="body2">
+                    {audioGenerationError}
+                  </Typography>
+                  <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
+                    Using demo audio for now. Your video will still be processed.
+                  </Typography>
+                </Alert>
               )}
 
               {/* AI Voiceover Audio Player */}
               {audioUrl && !isProcessing && (
                 <Box sx={{ mt: 2, p: 2, backgroundColor: 'grey.50', borderRadius: 2, border: '1px solid', borderColor: 'grey.200' }}>
-                  <Typography variant="subtitle2" color="primary" sx={{ mb: 1, fontWeight: 'bold' }}>
-                    🎤 AI Voiceover Narration
-                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    <Typography variant="subtitle2" color="primary" sx={{ fontWeight: 'bold' }}>
+                      🎤 AI Voiceover Narration
+                    </Typography>
+                    {backendAudioUrl ? (
+                      <Chip 
+                        label="✅ Downloaded Audio" 
+                        size="small" 
+                        color="success" 
+                        sx={{ fontSize: '0.7rem', height: 20 }}
+                      />
+                    ) : (
+                      <Chip 
+                        label="Demo Audio" 
+                        size="small" 
+                        color="warning" 
+                        sx={{ fontSize: '0.7rem', height: 20 }}
+                      />
+                    )}
+                  </Box>
                   
                   {/* Hidden audio element */}
                   <audio
