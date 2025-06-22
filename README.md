@@ -3,7 +3,7 @@ Llama 4 Hackathon Seattle
 
 # Readio
 📚 Reading Companion — Audio-First Edition (Unified Concept)
-1. Smart Book Discovery
+1.1 Smart Book Discovery
 Personalized search & AI-powered recommendations:
 
 
@@ -19,7 +19,7 @@ Applies hybrid recommender algorithms (collaborative + content-based filteri
 Pulls data from platforms like Qloo, The Hawaii Project, StoryGraph, and emerging players to enrich discovery en.wikipedia.org+2en.wikipedia.org+2en.wikipedia.org+2.
 
 
-2. Bite-Sized Audio Summaries
+1.2 Bite-Sized Audio Summaries
 AI-generated, audio-first summaries that spark curiosity:
 
 
@@ -35,7 +35,7 @@ Summaries optimized for on-the-go listening—perfect for commutes or micro-lear
 Builds on benefits of audiobooks in improving literacy, comprehension, empathy—especially for children and elderly—without replacing full reading. Also makes reading a habit for most young adults who currently spend most time on short videos.
 
 
-3. Tailored Audiobook Experiences
+2. Tailored Audiobook Experiences
 Voice personalization, not voice generation:
 
 
