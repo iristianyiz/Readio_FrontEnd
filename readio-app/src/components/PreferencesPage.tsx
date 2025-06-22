@@ -12,7 +12,7 @@ import {
   IconButton,
   Alert,
 } from '@mui/material';
-import { Logout, Book, Psychology, TrendingUp } from '@mui/icons-material';
+import { Logout, Book, Psychology, TrendingUp, AutoAwesome } from '@mui/icons-material';
 
 interface User {
   email: string;
@@ -37,7 +37,8 @@ const genres = [
   'Fiction', 'Non-Fiction', 'Mystery', 'Romance', 'Science Fiction',
   'Fantasy', 'Biography', 'History', 'Self-Help', 'Business',
   'Technology', 'Philosophy', 'Poetry', 'Drama', 'Comedy',
-  'Thriller', 'Horror', 'Adventure', 'Travel', 'Cooking'
+  'Thriller', 'Horror', 'Adventure', 'Travel', 'Cooking',
+  'Children\'s - picture books', 'Children\'s - science'
 ];
 
 const moods = [
@@ -76,6 +77,12 @@ const readingGoals = [
     title: 'Build a Reading Habit',
     description: 'I\'m working on making regular reading part of my routine.',
     icon: <Book />
+  },
+  {
+    id: 'foster-imagination',
+    title: 'Foster Imagination & Creativity',
+    description: 'I want to explore creative worlds and spark my imagination.',
+    icon: <AutoAwesome />
   }
 ];
 
@@ -170,16 +177,30 @@ const PreferencesPage: React.FC<PreferencesPageProps> = ({
                 Select all that apply (minimum 1)
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {genres.map((genre) => (
-                  <Chip
-                    key={genre}
-                    label={genre}
-                    onClick={() => handleGenreToggle(genre)}
-                    color={selectedGenres.includes(genre) ? 'primary' : 'default'}
-                    variant={selectedGenres.includes(genre) ? 'filled' : 'outlined'}
-                    sx={{ mb: 1 }}
-                  />
-                ))}
+                {genres.map((genre) => {
+                  const isSelected = selectedGenres.includes(genre);
+                  const isChildrensGenre = genre.startsWith('Children\'s');
+                  
+                  return (
+                    <Chip
+                      key={genre}
+                      label={genre}
+                      onClick={() => handleGenreToggle(genre)}
+                      color={isSelected ? 'primary' : 'default'}
+                      variant={isSelected ? 'filled' : 'outlined'}
+                      sx={{ 
+                        mb: 1,
+                        ...(isSelected && isChildrensGenre && {
+                          backgroundColor: '#FFC0CB',
+                          color: '#000',
+                          '&:hover': {
+                            backgroundColor: '#FFB6C1',
+                          }
+                        })
+                      }}
+                    />
+                  );
+                })}
               </Box>
               {selectedGenres.length > 0 && (
                 <Typography variant="caption" color="primary" sx={{ mt: 1, display: 'block' }}>
