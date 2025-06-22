@@ -69,13 +69,13 @@ const RecommendationPage: React.FC<RecommendationPageProps> = ({
 
   // Mock audio URL - in real app this would come from backend
   const audioUrl = saveMethod === 'server' 
-    ? 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav' // Real audio from server
-    : 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav'; // Demo audio
+    ? '/function2.wav' // Real audio from server
+    : '/function2.wav'; // Demo audio
 
   // Mock video URL - in real app this would come from backend
   const videoUrl = saveMethod === 'server'
-    ? 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4' // Real video from server
-    : 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4'; // Demo video
+    ? '/output.mp4' // Real video from server
+    : '/SampleVideo_360x240_1mb.mp4'; // Demo video
 
   // Scroll to top when component mounts
   useEffect(() => {
@@ -89,7 +89,7 @@ const RecommendationPage: React.FC<RecommendationPageProps> = ({
         title: "📖 Personalized Book Recommendations Video",
         description: "Your AI-generated video based on your preferences",
         isRealVideo: true,
-        videoUrl: "https://example.com/personalized-video.mp4", // This would be the real video URL from backend
+        videoUrl: videoUrl,
         status: "✅ Real video from server"
       };
     } else {
@@ -98,7 +98,7 @@ const RecommendationPage: React.FC<RecommendationPageProps> = ({
         description: "Sample video - preferences saved locally",
         isRealVideo: false,
         videoUrl: null,
-        status: "⚠️ Demo video - server unavailable"
+        status: "Playing Now!"
       };
     }
   };

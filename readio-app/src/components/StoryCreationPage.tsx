@@ -175,7 +175,7 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
           setAudioGenerationError(`Audio download failed: ${downloadError instanceof Error ? downloadError.message : 'Unknown error'}`);
           
           // Fallback to demo audio
-          setAudioUrl('https://www.soundjay.com/misc/sounds/bell-ringing-05.wav');
+          setAudioUrl('/function2.wav');
           setDuration(180);
           setProcessingProgress(100);
         }
@@ -201,7 +201,7 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
 
       // Fallback to demo audio
       console.log('Falling back to demo audio');
-      setAudioUrl('https://www.soundjay.com/misc/sounds/bell-ringing-05.wav');
+      setAudioUrl('/function2.wav');
       setDuration(180);
       setProcessingProgress(100);
 
