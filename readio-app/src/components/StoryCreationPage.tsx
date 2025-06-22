@@ -4,30 +4,29 @@ import {
   Paper,
   Typography,
   Button,
+  TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   AppBar,
   Toolbar,
   IconButton,
   Alert,
-  Card,
-  CardContent,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
+  LinearProgress,
   MenuItem,
   Chip,
-  LinearProgress,
 } from '@mui/material';
 import { 
   Logout, 
-  Create, 
   CloudUpload, 
-  ArrowBack,
-  VideoLibrary,
-  Description,
-  Category,
-  PlayArrow,
-  Pause
+  PlayArrow, 
+  Pause, 
+  VolumeUp, 
+  VolumeOff,
+  Close,
+  AutoAwesome,
+  ArrowBack
 } from '@mui/icons-material';
 
 interface User {
@@ -71,10 +70,14 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
   const [showSuccess, setShowSuccess] = useState(false);
   const [processingProgress, setProcessingProgress] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [showDubPopup, setShowDubPopup] = useState(false);
+  const [isDubPlaying, setIsDubPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isAudioMuted, setIsAudioMuted] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const handleGenreToggle = (genre: string) => {
@@ -113,43 +116,14 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
             setIsProcessing(false);
             console.log('Processing completed');
             // Generate mock audio URL and set duration
-            // For testing, using a real audio sample (in real app, this would be the actual AI-generated audio)
             setAudioUrl('https://www.soundjay.com/misc/sounds/bell-ringing-05.wav');
             setDuration(180); // 3 minutes in seconds
-            console.log('Audio URL set:', 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav');
-            console.log('Duration set:', 180);
-            console.log('isProcessing set to false');
             return 100;
           }
           return newProgress;
         });
       }, 500);
     }
-  };
-
-  const handlePlayPause = () => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
-  };
-
-  const handleSeek = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newTime = parseFloat(event.target.value);
-    setCurrentTime(newTime);
-    if (audioRef.current) {
-      audioRef.current.currentTime = newTime;
-    }
-  };
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const handleSubmit = () => {
@@ -173,34 +147,138 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
 
   const isFormValid = storyTitle && storyDescription && selectedGenres.length > 0 && storyType;
 
+  const handleDubPlayPause = () => {
+    if (videoRef.current && audioRef.current) {
+      if (isDubPlaying) {
+        videoRef.current.pause();
+        audioRef.current.pause();
+      } else {
+        videoRef.current.play();
+        audioRef.current.play();
+      }
+      setIsDubPlaying(!isDubPlaying);
+    }
+  };
+
+  const handleDubSeek = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newTime = parseFloat(event.target.value);
+    if (videoRef.current && audioRef.current) {
+      videoRef.current.currentTime = newTime;
+      audioRef.current.currentTime = newTime;
+      setCurrentTime(newTime);
+    }
+  };
+
+  const handleOpenDubPopup = () => {
+    setShowDubPopup(true);
+    setIsDubPlaying(false);
+    setCurrentTime(0);
+  };
+
+  const handleCloseDubPopup = () => {
+    setShowDubPopup(false);
+    setIsDubPlaying(false);
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
+  };
+
   // Handle audio time updates
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    const handleTimeUpdate = () => {
+    const handleAudioTimeUpdate = () => {
       setCurrentTime(audio.currentTime);
     };
 
-    const handleLoadedMetadata = () => {
+    const handleAudioLoadedMetadata = () => {
       setDuration(audio.duration);
     };
 
-    const handleEnded = () => {
+    const handleAudioEnded = () => {
       setIsPlaying(false);
       setCurrentTime(0);
     };
 
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('timeupdate', handleAudioTimeUpdate);
+    audio.addEventListener('loadedmetadata', handleAudioLoadedMetadata);
+    audio.addEventListener('ended', handleAudioEnded);
 
     return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('timeupdate', handleAudioTimeUpdate);
+      audio.removeEventListener('loadedmetadata', handleAudioLoadedMetadata);
+      audio.removeEventListener('ended', handleAudioEnded);
     };
   }, [audioUrl]);
+
+  // Handle video time updates
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleTimeUpdate = () => {
+      setCurrentTime(video.currentTime);
+    };
+
+    const handleLoadedMetadata = () => {
+      setDuration(video.duration);
+    };
+
+    const handleEnded = () => {
+      setIsDubPlaying(false);
+      setCurrentTime(0);
+    };
+
+    const handleCanPlay = () => {
+      console.log('Video can play, duration:', video.duration);
+      setDuration(video.duration);
+    };
+
+    video.addEventListener('timeupdate', handleTimeUpdate);
+    video.addEventListener('loadedmetadata', handleLoadedMetadata);
+    video.addEventListener('ended', handleEnded);
+    video.addEventListener('canplay', handleCanPlay);
+
+    return () => {
+      video.removeEventListener('timeupdate', handleTimeUpdate);
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      video.removeEventListener('ended', handleEnded);
+      video.removeEventListener('canplay', handleCanPlay);
+    };
+  }, [showDubPopup]);
+
+  const handlePlayPause = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const handleSeek = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newTime = parseFloat(event.target.value);
+    setCurrentTime(newTime);
+    if (audioRef.current) {
+      audioRef.current.currentTime = newTime;
+    }
+  };
+
+  const handleAudioMuteToggle = () => {
+    if (audioRef.current) {
+      audioRef.current.muted = !isAudioMuted;
+      setIsAudioMuted(!isAudioMuted);
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   return (
     <Box>
@@ -302,7 +380,7 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
               borderRadius: '20px'
             }}>
               <Typography variant="h6" gutterBottom>
-                <Description sx={{ mr: 1, verticalAlign: 'middle' }} />
+                <AutoAwesome sx={{ mr: 1, verticalAlign: 'middle' }} />
                 Story Information
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
@@ -329,22 +407,21 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
                 required
               />
 
-              <FormControl fullWidth sx={{ mb: 3 }}>
-                <InputLabel>Story Type</InputLabel>
-                <Select
-                  value={storyType}
-                  label="Story Type"
-                  onChange={(e) => setStoryType(e.target.value)}
-                  required
-                >
-                  <MenuItem value="short-story">Short Story</MenuItem>
-                  <MenuItem value="novel">Novel</MenuItem>
-                  <MenuItem value="poem">Poem</MenuItem>
-                  <MenuItem value="script">Script</MenuItem>
-                  <MenuItem value="childrens-book">Children's Book</MenuItem>
-                  <MenuItem value="fan-fiction">Fan Fiction</MenuItem>
-                </Select>
-              </FormControl>
+              <TextField
+                fullWidth
+                label="Story Type"
+                value={storyType}
+                onChange={(e) => setStoryType(e.target.value)}
+                select
+                required
+              >
+                <MenuItem value="short-story">Short Story</MenuItem>
+                <MenuItem value="novel">Novel</MenuItem>
+                <MenuItem value="poem">Poem</MenuItem>
+                <MenuItem value="script">Script</MenuItem>
+                <MenuItem value="childrens-book">Children's Book</MenuItem>
+                <MenuItem value="fan-fiction">Fan Fiction</MenuItem>
+              </TextField>
             </Paper>
           </Box>
 
@@ -357,14 +434,14 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
               borderRadius: '20px'
             }}>
               <Typography variant="h6" gutterBottom>
-                <VideoLibrary sx={{ mr: 1, verticalAlign: 'middle' }} />
+                <AutoAwesome sx={{ mr: 1, verticalAlign: 'middle' }} />
                 Video Upload
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                 Upload a video to accompany your story (optional)
               </Typography>
               
-              <Card
+              <Paper
                 sx={{
                   border: '2px dashed',
                   borderColor: videoFile ? 'success.main' : 'grey.300',
@@ -397,7 +474,7 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
                     : 'MP4, MOV, AVI up to 100MB'
                   }
                 </Typography>
-              </Card>
+              </Paper>
               
               <Typography variant="body2" color="text.secondary" sx={{ mt: 2, textAlign: 'center', fontStyle: 'italic' }}>
                 Use AI to automatically analyze your video and generate a professional voiceover for a polished, engaging result.
@@ -463,29 +540,64 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
                     </Typography>
                     
                     {/* Progress Bar */}
-                    <Box sx={{ flex: 1, mx: 2 }}>
+                    <Box>
                       <input
                         type="range"
                         min="0"
-                        max={duration}
+                        max={duration || 0}
                         value={currentTime}
                         onChange={handleSeek}
                         style={{
                           width: '100%',
-                          height: '6px',
-                          borderRadius: '3px',
-                          background: 'linear-gradient(to right, #1976d2 0%, #1976d2 ' + (currentTime / duration * 100) + '%, #e0e0e0 ' + (currentTime / duration * 100) + '%, #e0e0e0 100%)',
+                          height: '8px',
+                          borderRadius: '4px',
+                          background: `linear-gradient(to right, #2c5aa0 0%, #2c5aa0 ${(currentTime / (duration || 1)) * 100}%, #ddd ${(currentTime / (duration || 1)) * 100}%, #ddd 100%)`,
                           outline: 'none',
                           cursor: 'pointer'
                         }}
                       />
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+                        <Typography variant="caption" color="text.secondary">
+                          {formatTime(currentTime)}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {formatTime(duration)}
+                        </Typography>
+                      </Box>
                     </Box>
                     
                     {/* Duration */}
                     <Typography variant="body2" color="text.secondary" sx={{ minWidth: 45 }}>
                       {formatTime(duration)}
                     </Typography>
+
+                    {/* Audio Mute Button */}
+                    <IconButton
+                      onClick={handleAudioMuteToggle}
+                      sx={{
+                        backgroundColor: 'primary.main',
+                        color: 'white',
+                        '&:hover': { backgroundColor: 'primary.dark' }
+                      }}
+                    >
+                      {isAudioMuted ? <VolumeOff /> : <VolumeUp />}
+                    </IconButton>
                   </Box>
+
+                  {/* Dub Video Button */}
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={handleOpenDubPopup}
+                    sx={{ 
+                      mt: 2,
+                      backgroundColor: '#2c5aa0',
+                      borderRadius: '15px',
+                      '&:hover': { backgroundColor: '#1e3a8a' }
+                    }}
+                  >
+                    🎬 Watch Dubbed Video
+                  </Button>
                 </Box>
               )}
             </Paper>
@@ -503,7 +615,7 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
               borderRadius: '20px'
             }}>
               <Typography variant="h6" gutterBottom>
-                <Category sx={{ mr: 1, verticalAlign: 'middle' }} />
+                <AutoAwesome sx={{ mr: 1, verticalAlign: 'middle' }} />
                 What genre is your story?
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -538,7 +650,7 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
               borderRadius: '20px'
             }}>
               <Typography variant="h6" gutterBottom>
-                <Create sx={{ mr: 1, verticalAlign: 'middle' }} />
+                <AutoAwesome sx={{ mr: 1, verticalAlign: 'middle' }} />
                 What themes does your story explore?
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -585,7 +697,7 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
           <Button
             variant="contained"
             size="large"
-            startIcon={<Create />}
+            startIcon={<AutoAwesome />}
             onClick={handleSubmit}
             disabled={!isFormValid}
             sx={{ 
@@ -600,6 +712,135 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
           </Button>
         </Box>
       </Box>
+
+      {/* Dubbed Video Popup */}
+      <Dialog
+        open={showDubPopup}
+        onClose={handleCloseDubPopup}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: '20px',
+            backgroundColor: '#e6f3ff',
+            p: 2
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          textAlign: 'center',
+          fontFamily: '"Lora", Georgia, "Times New Roman", serif',
+          color: '#2c5aa0'
+        }}>
+          🎬 Dubbed Video with AI Voiceover
+        </DialogTitle>
+        
+        <DialogContent>
+          <Box sx={{ position: 'relative', mb: 2 }}>
+            <video
+              ref={videoRef}
+              controls={false}
+              style={{
+                width: '100%',
+                borderRadius: '15px',
+                backgroundColor: '#000'
+              }}
+              onTimeUpdate={() => {
+                if (videoRef.current) {
+                  setCurrentTime(videoRef.current.currentTime);
+                }
+              }}
+              onLoadedMetadata={() => {
+                if (videoRef.current) {
+                  setDuration(videoRef.current.duration);
+                }
+              }}
+              onCanPlay={() => {
+                if (videoRef.current) {
+                  setDuration(videoRef.current.duration);
+                }
+              }}
+            >
+              <source src={videoFile ? URL.createObjectURL(videoFile) : ''} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+            
+            {/* Hidden audio element for AI voiceover */}
+            <audio
+              ref={audioRef}
+              src={audioUrl || ''}
+              style={{ display: 'none' }}
+              onTimeUpdate={() => {
+                if (audioRef.current) {
+                  setCurrentTime(audioRef.current.currentTime);
+                }
+              }}
+              onLoadedMetadata={() => {
+                if (audioRef.current) {
+                  setDuration(audioRef.current.duration);
+                }
+              }}
+            />
+          </Box>
+
+          {/* Simple Controls */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {/* Progress Bar */}
+            <Box>
+              <input
+                type="range"
+                min="0"
+                max={duration || 0}
+                value={currentTime}
+                onChange={handleDubSeek}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: `linear-gradient(to right, #2c5aa0 0%, #2c5aa0 ${(currentTime / (duration || 1)) * 100}%, #ddd ${(currentTime / (duration || 1)) * 100}%, #ddd 100%)`,
+                  outline: 'none',
+                  cursor: 'pointer'
+                }}
+              />
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+                <Typography variant="caption" color="text.secondary">
+                  {formatTime(currentTime)}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {formatTime(duration)}
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Play/Pause Button */}
+            <Button
+              variant="contained"
+              onClick={handleDubPlayPause}
+              sx={{
+                borderRadius: '25px',
+                py: 1.5,
+                fontFamily: '"Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif',
+                fontWeight: 500
+              }}
+            >
+              {isDubPlaying ? '⏸️ Pause' : '▶️ Play'}
+            </Button>
+          </Box>
+        </DialogContent>
+
+        <DialogActions>
+          <Button
+            onClick={handleCloseDubPopup}
+            sx={{
+              borderRadius: '20px',
+              px: 3,
+              py: 1
+            }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
