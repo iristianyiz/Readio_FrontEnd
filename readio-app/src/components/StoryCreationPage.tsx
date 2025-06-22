@@ -26,7 +26,9 @@ import {
   VolumeOff,
   Close,
   AutoAwesome,
-  ArrowBack
+  ArrowBack,
+  Facebook,
+  Instagram
 } from '@mui/icons-material';
 
 interface User {
@@ -278,6 +280,43 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Social sharing functions
+  const handleShareOnFacebook = () => {
+    const shareUrl = 'https://www.facebook.com/sharer/sharer.php';
+    const shareText = `Check out my AI-dubbed video created with Readio! 🎬✨`;
+    const url = `${shareUrl}?u=${encodeURIComponent(window.location.href)}&quote=${encodeURIComponent(shareText)}`;
+    window.open(url, '_blank', 'width=600,height=400');
+  };
+
+  const handleShareOnInstagram = () => {
+    // Instagram doesn't have a direct share URL, so we'll copy to clipboard
+    const shareText = `Check out my AI-dubbed video created with Readio! 🎬✨\n\n#Readio #AIVideo #DubbedVideo #Creative`;
+    
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(shareText).then(() => {
+        alert('Share text copied to clipboard! You can now paste it on Instagram.');
+      }).catch(() => {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = shareText;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        alert('Share text copied to clipboard! You can now paste it on Instagram.');
+      });
+    } else {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = shareText;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('Share text copied to clipboard! You can now paste it on Instagram.');
+    }
   };
 
   return (
@@ -585,19 +624,36 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
                   </Box>
 
                   {/* Dub Video Button */}
-                  <Button
-                    variant="contained"
-                    size="small"
-                    onClick={handleOpenDubPopup}
-                    sx={{ 
-                      mt: 2,
-                      backgroundColor: '#2c5aa0',
-                      borderRadius: '15px',
-                      '&:hover': { backgroundColor: '#1e3a8a' }
-                    }}
-                  >
-                    🎬 Watch Dubbed Video
-                  </Button>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    width: '100%', 
+                    mt: 3 
+                  }}>
+                    <Button
+                      variant="contained"
+                      size="large"
+                      onClick={handleOpenDubPopup}
+                      sx={{ 
+                        px: 4,
+                        py: 2,
+                        fontSize: '1.1rem',
+                        backgroundColor: '#2c5aa0',
+                        borderRadius: '25px',
+                        fontFamily: '"Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif',
+                        fontWeight: 500,
+                        boxShadow: '0 4px 12px rgba(44, 90, 160, 0.3)',
+                        '&:hover': { 
+                          backgroundColor: '#1e3a8a',
+                          transform: 'translateY(-2px)',
+                          boxShadow: '0 6px 16px rgba(44, 90, 160, 0.4)',
+                          transition: 'all 0.3s ease'
+                        }
+                      }}
+                    >
+                      🎬 Watch Your AI Dubbed Video!
+                    </Button>
+                  </Box>
                 </Box>
               )}
             </Paper>
@@ -818,13 +874,107 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
               onClick={handleDubPlayPause}
               sx={{
                 borderRadius: '25px',
-                py: 1.5,
-                fontFamily: '"Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif',
-                fontWeight: 500
+                py: 2.5,
+                px: 4,
+                fontSize: '1.1rem',
+                fontFamily: '"Segoe UI", "TT Neoris", "Helvetica Neue", Arial, sans-serif',
+                fontWeight: 500,
+                background: 'linear-gradient(45deg, #FF6B6B 0%, #4ECDC4 25%, #45B7D1 50%, #96CEB4 75%, #FFEAA7 100%)',
+                backgroundSize: '200% 200%',
+                animation: 'gradientShift 3s ease infinite',
+                boxShadow: '0 6px 20px rgba(255, 107, 107, 0.4)',
+                '&:hover': {
+                  transform: 'translateY(-3px) scale(1.05)',
+                  boxShadow: '0 8px 25px rgba(255, 107, 107, 0.6)',
+                  transition: 'all 0.3s ease',
+                  animation: 'gradientShift 1s ease infinite'
+                },
+                '@keyframes gradientShift': {
+                  '0%': { backgroundPosition: '0% 50%' },
+                  '50%': { backgroundPosition: '100% 50%' },
+                  '100%': { backgroundPosition: '0% 50%' }
+                }
               }}
             >
               {isDubPlaying ? '⏸️ Pause' : '▶️ Play'}
             </Button>
+
+            {/* Social Sharing Buttons */}
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 2, 
+              mt: 2,
+              pt: 5,
+              borderTop: '1px solid rgba(173, 227, 86, 0.2)'
+            }}>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  color: '#2c5aa0',
+                  fontWeight: 600,
+                  mb: 1,
+                  textAlign: 'center',
+                  fontSize: '1.3rem',
+                  fontFamily: '"Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif',
+                  textShadow: '0 2px 4px rgba(44, 90, 160, 0.1)'
+                }}
+              >
+                ⭐ Share Your AI Dubbed Video: ⭐
+              </Typography>
+              
+              <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                gap: 2,
+                flexWrap: 'wrap'
+              }}>
+                <Button
+                  variant="contained"
+                  startIcon={<Facebook />}
+                  onClick={handleShareOnFacebook}
+                  sx={{
+                    backgroundColor: '#1877f2',
+                    borderRadius: '20px',
+                    px: 5,
+                    py: 2.5,
+                    fontFamily: '"Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif',
+                    fontWeight: 500,
+                    '&:hover': {
+                      backgroundColor: '#166fe5',
+                      transform: 'translateY(-1px)',
+                      boxShadow: '0 4px 12px rgba(24, 119, 242, 0.4)',
+                      transition: 'all 0.3s ease'
+                    }
+                  }}
+                >
+                  Share on Facebook
+                </Button>
+                
+                <Button
+                  variant="contained"
+                  startIcon={<Instagram />}
+                  onClick={handleShareOnInstagram}
+                  sx={{
+                    background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)',
+                    borderRadius: '20px',
+                    px: 5,
+                    py: 2.5,
+                    fontFamily: '"Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif',
+                    fontWeight: 500,
+                    '&:hover': {
+                      background: 'linear-gradient(45deg, #e0852e 0%, #d55f37 25%, #c6223e 50%, #b71f5b 75%, #a7157a 100%)',
+                      transform: 'translateY(-1px)',
+                      boxShadow: '0 4px 12px rgba(220, 39, 67, 0.4)',
+                      transition: 'all 0.3s ease'
+                    }
+                  }}
+                >
+                  Share on Instagram
+                </Button>
+              </Box>
+            </Box>
           </Box>
         </DialogContent>
 
