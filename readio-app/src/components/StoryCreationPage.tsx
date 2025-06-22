@@ -204,15 +204,35 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
 
   return (
     <Box>
-      <AppBar position="static" sx={{ mb: 3 }}>
+      <AppBar position="static" sx={{ 
+        mb: 3, 
+        backgroundColor: '#e6f3ff', // Lighter blue
+        borderRadius: '15px'
+      }}>
         <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Readio - Create Your Own Stories
+          <Typography 
+            variant="h6" 
+            component="div" 
+            sx={{ 
+              flexGrow: 1,
+              color: '#2c5aa0', // Darker blue text for contrast
+              fontFamily: '"Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif',
+              fontWeight: 500
+            }}
+          >
+            Readio - Choose Your Experience
           </Typography>
-          <Typography variant="body2" sx={{ mr: 2 }}>
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              mr: 2,
+              color: '#2c5aa0', // Darker blue text for contrast
+              fontFamily: '"Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif'
+            }}
+          >
             Welcome, {user?.email}
           </Typography>
-          <IconButton color="inherit" onClick={onLogout}>
+          <IconButton color="inherit" onClick={onLogout} sx={{ color: '#2c5aa0' }}>
             <Logout />
           </IconButton>
         </Toolbar>
@@ -224,10 +244,49 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
         </Alert>
       )}
 
-      <Typography variant="h4" component="h1" gutterBottom align="center">
-        Create Your Own Stories
+      <Typography 
+        variant="h3" 
+        component="h1" 
+        gutterBottom 
+        align="center"
+        sx={{
+          fontFamily: '"Lora", Georgia, "Times New Roman", serif',
+          fontWeight: 600,
+          letterSpacing: '0.5px',
+          mb: 2,
+          background: 'linear-gradient(90deg, #87CEEB 0%, #6495ED 25%, rgb(46, 93, 163) 50%, #6495ED 75%, #87CEEB 100%)',
+          backgroundSize: '200% 100%',
+          backgroundClip: 'text',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          animation: 'colorFlow 8s ease-in-out infinite',
+          '@keyframes colorFlow': {
+            '0%': {
+              backgroundPosition: '0% 50%'
+            },
+            '50%': {
+              backgroundPosition: '100% 50%'
+            },
+            '100%': {
+              backgroundPosition: '0% 50%'
+            }
+          }
+        }}
+      >
+        <span>✨</span>Create Your Own Stories<span>✨</span>
       </Typography>
-      <Typography variant="body1" color="text.secondary" align="center" sx={{ mb: 4 }}>
+      <Typography 
+        variant="h6" 
+        align="center" 
+        sx={{ 
+          mb: 5,
+          fontFamily: '"Comic Sans MS", "Chalkboard SE", "Comic Neue", cursive',
+          color: 'rgb(250, 250, 163)',
+          fontWeight: 500,
+          fontSize: '1.2rem',
+          letterSpacing: '0.3px'
+        }}
+      >
         Unleash your creativity and bring your stories to life
       </Typography>
 
@@ -236,7 +295,12 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
         <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 4 }}>
           {/* Basic Story Information */}
           <Box sx={{ flex: 1 }}>
-            <Paper elevation={2} sx={{ p: 3, height: 'fit-content' }}>
+            <Paper elevation={2} sx={{ 
+              p: 3, 
+              height: 'fit-content',
+              backgroundColor: '#e6f3ff', // Light blue background
+              borderRadius: '20px'
+            }}>
               <Typography variant="h6" gutterBottom>
                 <Description sx={{ mr: 1, verticalAlign: 'middle' }} />
                 Story Information
@@ -286,7 +350,12 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
 
           {/* Video Upload Section */}
           <Box sx={{ flex: 1 }}>
-            <Paper elevation={2} sx={{ p: 3, height: 'fit-content' }}>
+            <Paper elevation={2} sx={{ 
+              p: 3, 
+              height: 'fit-content',
+              backgroundColor: '#e6f3ff', // Light blue background
+              borderRadius: '20px'
+            }}>
               <Typography variant="h6" gutterBottom>
                 <VideoLibrary sx={{ mr: 1, verticalAlign: 'middle' }} />
                 Video Upload
@@ -303,6 +372,7 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
                   p: 3,
                   textAlign: 'center',
                   cursor: 'pointer',
+                  borderRadius: '15px',
                   '&:hover': {
                     borderColor: 'primary.main',
                     backgroundColor: 'primary.50',
@@ -426,7 +496,12 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
         <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 4 }}>
           {/* Genres Section */}
           <Box sx={{ flex: 1 }}>
-            <Paper elevation={2} sx={{ p: 3, height: 'fit-content' }}>
+            <Paper elevation={2} sx={{ 
+              p: 3, 
+              height: 'fit-content',
+              backgroundColor: '#e6f3ff', // Light blue background
+              borderRadius: '20px'
+            }}>
               <Typography variant="h6" gutterBottom>
                 <Category sx={{ mr: 1, verticalAlign: 'middle' }} />
                 What genre is your story?
@@ -456,7 +531,12 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
 
           {/* Themes Section */}
           <Box sx={{ flex: 1 }}>
-            <Paper elevation={2} sx={{ p: 3, height: 'fit-content' }}>
+            <Paper elevation={2} sx={{ 
+              p: 3, 
+              height: 'fit-content',
+              backgroundColor: '#e6f3ff', // Light blue background
+              borderRadius: '20px'
+            }}>
               <Typography variant="h6" gutterBottom>
                 <Create sx={{ mr: 1, verticalAlign: 'middle' }} />
                 What themes does your story explore?
@@ -492,7 +572,13 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
             size="large"
             startIcon={<ArrowBack />}
             onClick={onBackToSelection}
-            sx={{ px: 4, py: 1.5 }}
+            sx={{ 
+              px: 4, 
+              py: 1.5,
+              borderRadius: '25px',
+              fontFamily: '"Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif',
+              fontWeight: 500
+            }}
           >
             Back to Selection
           </Button>
@@ -502,7 +588,13 @@ const StoryCreationPage: React.FC<StoryCreationPageProps> = ({
             startIcon={<Create />}
             onClick={handleSubmit}
             disabled={!isFormValid}
-            sx={{ px: 4, py: 1.5 }}
+            sx={{ 
+              px: 4, 
+              py: 1.5,
+              borderRadius: '25px',
+              fontFamily: '"Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif',
+              fontWeight: 500
+            }}
           >
             Create Story
           </Button>

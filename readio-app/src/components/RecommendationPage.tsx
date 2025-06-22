@@ -69,14 +69,18 @@ const RecommendationPage: React.FC<RecommendationPageProps> = ({
       overflow: 'hidden',
       boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
     }}>
-      <AppBar position="static" sx={{ mb: 3, backgroundColor: '#e6f3ff' }}>
+      <AppBar position="static" sx={{ 
+        mb: 3, 
+        backgroundColor: '#e6f3ff', // Lighter blue
+        borderRadius: '15px'
+      }}>
         <Toolbar>
           <Typography 
             variant="h6" 
             component="div" 
             sx={{ 
-              flexGrow: 1, 
-              color: '#4a4a4a',
+              flexGrow: 1,
+              color: '#2c5aa0', // Darker blue text for contrast
               fontFamily: '"Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif',
               fontWeight: 500
             }}
@@ -86,14 +90,14 @@ const RecommendationPage: React.FC<RecommendationPageProps> = ({
           <Typography 
             variant="body2" 
             sx={{ 
-              mr: 2, 
-              color: '#4a4a4a',
+              mr: 2,
+              color: '#2c5aa0', // Darker blue text for contrast
               fontFamily: '"Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif'
             }}
           >
             Welcome, {user?.email}
           </Typography>
-          <IconButton color="inherit" onClick={onLogout} sx={{ color: '#4a4a4a' }}>
+          <IconButton color="inherit" onClick={onLogout} sx={{ color: '#2c5aa0' }}>
             <Logout />
           </IconButton>
         </Toolbar>
@@ -115,18 +119,36 @@ const RecommendationPage: React.FC<RecommendationPageProps> = ({
               alignItems: 'center',
               justifyContent: 'center',
               gap: 2,
-              '@import': 'url("https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap")'
+              background: 'linear-gradient(90deg, #87CEEB 0%, #6495ED 25%, rgb(46, 93, 163) 50%, #6495ED 75%, #87CEEB 100%)',
+              backgroundSize: '200% 100%',
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              animation: 'colorFlow 8s ease-in-out infinite',
+              '@keyframes colorFlow': {
+                '0%': {
+                  backgroundPosition: '0% 50%'
+                },
+                '50%': {
+                  backgroundPosition: '100% 50%'
+                },
+                '100%': {
+                  backgroundPosition: '0% 50%'
+                }
+              }
             }}
           >
-            Your Personalized Book Recommendations
+            <span>🩵</span>Your Personalized Book Recommendations<span>🩵</span>
           </Typography>
           <Typography 
             variant="h6" 
             sx={{ 
               mb: 3,
               color: '#666666',
-              fontFamily: '"Comic Sans MS", "Roboto", "Helvetica Neue", Arial, sans-serif',
-              fontWeight: 400
+              fontFamily: '"Comic Sans MS", "Chalkboard SE", "Comic Neue", cursive',
+              fontWeight: 400,
+              fontSize: '1.2rem',
+              letterSpacing: '0.3px'
             }}
           >
             Based on your preferences, we've curated the perfect reading list for you
